@@ -98,7 +98,7 @@ def train_custom_cnn(
     logger.info("=" * 60)
 
     model = build_custom_cnn(num_classes=NUM_CLASSES, learning_rate=LEARNING_RATE_CUSTOM)
-    callbacks = get_training_callbacks(checkpoint_path, monitor="val_accuracy")
+    callbacks = get_training_callbacks(checkpoint_path, monitor="val_accuracy", patience_es=6)
 
     history = model.fit(
         train_ds,
@@ -108,9 +108,17 @@ def train_custom_cnn(
         verbose=1
     )
 
+    if checkpoint_path.exists():
+        logger.info(f"Restoring best Custom CNN weights from {checkpoint_path}...")
+        model = keras.models.load_model(checkpoint_path)
+
     history_dict = {k: [float(v) for v in vals] for k, vals in history.history.items()}
     save_json(history_dict, RESULTS_DIR / "custom_cnn_history.json")
     plot_training_history(history_dict, RESULTS_DIR / "custom_cnn_history.png")
+
+    from config import FINAL_RESULTS_DIR
+    save_json(history_dict, FINAL_RESULTS_DIR / "final_custom_cnn_history.json")
+    plot_training_history(history_dict, FINAL_RESULTS_DIR / "final_custom_cnn_history.png")
 
     logger.info(f"Custom CNN training completed. Best checkpoint saved to {checkpoint_path}")
     return model, history_dict
@@ -133,7 +141,7 @@ def train_mobilenetv2(
     logger.info("=" * 60)
 
     model, base_model = build_mobilenetv2_model(num_classes=NUM_CLASSES, learning_rate=LEARNING_RATE_TRANSFER)
-    callbacks_warmup = get_training_callbacks(checkpoint_path, monitor="val_accuracy", patience_es=4)
+    callbacks_warmup = get_training_callbacks(checkpoint_path, monitor="val_accuracy", patience_es=5)
 
     logger.info(">>> Stage 1: Training Classification Head (Pre-trained Base Frozen)...")
     h1 = model.fit(
@@ -144,11 +152,19 @@ def train_mobilenetv2(
         verbose=1
     )
 
+    best_warmup_acc = float(max(h1.history.get("val_accuracy", [0.0])))
+    logger.info(f"Stage 1 completed. Best Validation Accuracy: {best_warmup_acc:.4%}")
+
     # Stage 2: Fine-Tuning
     if finetune_epochs > 0:
         logger.info(">>> Stage 2: Fine-Tuning MobileNetV2 Upper Layers (from layer 100)...")
         model = setup_mobilenetv2_finetuning(model, base_model, fine_tune_at=100, fine_tune_lr=LEARNING_RATE_FINE_TUNE)
-        callbacks_finetune = get_training_callbacks(checkpoint_path, monitor="val_accuracy", patience_es=4)
+        callbacks_finetune = get_training_callbacks(checkpoint_path, monitor="val_accuracy", patience_es=5)
+
+        # Ensure ModelCheckpoint in Stage 2 tracks and beats Stage 1 best
+        for cb in callbacks_finetune:
+            if isinstance(cb, ModelCheckpoint):
+                cb.best = best_warmup_acc
 
         initial_epoch = len(h1.history["accuracy"])
         total_epochs = initial_epoch + finetune_epochs
@@ -168,8 +184,17 @@ def train_mobilenetv2(
     else:
         combined_history = {k: [float(v) for v in vals] for k, vals in h1.history.items()}
 
+    # Reload best saved checkpoint weights
+    if checkpoint_path.exists():
+        logger.info(f"Restoring best checkpoint weights from {checkpoint_path}...")
+        model = keras.models.load_model(checkpoint_path)
+
     save_json(combined_history, RESULTS_DIR / "mobilenetv2_history.json")
     plot_training_history(combined_history, RESULTS_DIR / "training_history.png")
+
+    from config import FINAL_TRAINING_HISTORY_PATH, FINAL_RESULTS_DIR
+    save_json(combined_history, FINAL_RESULTS_DIR / "final_mobilenetv2_history.json")
+    plot_training_history(combined_history, FINAL_TRAINING_HISTORY_PATH)
 
     logger.info(f"MobileNetV2 training completed. Best checkpoint saved to {checkpoint_path}")
     return model, combined_history

@@ -25,9 +25,12 @@ def test_extract_sample_id():
     f2 = "00075aa8-d81a-4184-8541-b692b78d398a___FREC_Scab 3335_new30degFlipLR.JPG"
     assert _extract_sample_id(f2) == "00075aa8-d81a-4184-8541-b692b78d398a"
 
-    # UUID without ___
-    f3 = "a1b2c3d4-e5f6-7890-abcd-ef1234567890.jpg"
-    assert _extract_sample_id(f3) == "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+    # Corn common rust without ___
+    f4 = "RS_Rust 2335_flipLR.JPG"
+    assert _extract_sample_id(f4) == "RS_Rust 2335"
+
+    f5 = "RS_Rust 2335.JPG"
+    assert _extract_sample_id(f5) == "RS_Rust 2335"
 
 
 def test_stratified_split_anti_leakage():

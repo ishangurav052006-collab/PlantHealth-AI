@@ -29,6 +29,10 @@ from sklearn.metrics import (
 )
 import tensorflow as tf
 
+from collections import defaultdict
+import random
+import shutil
+
 from config import (
     BATCH_SIZE,
     CLASSIFICATION_REPORT_PATH,
@@ -36,6 +40,13 @@ from config import (
     CUSTOM_CNN_MODEL_PATH,
     DATA_DIR,
     EVAL_REPORT_PATH,
+    FINAL_CLASSIFICATION_REPORT_PATH,
+    FINAL_CONFUSION_MATRIX_PATH,
+    FINAL_EVAL_REPORT_PATH,
+    FINAL_METRICS_JSON_PATH,
+    FINAL_MODEL_COMPARISON_PATH,
+    FINAL_PREDICTION_SAMPLES_PATH,
+    FINAL_RESULTS_DIR,
     METRICS_JSON_PATH,
     MOBILENET_MODEL_PATH,
     MODEL_COMPARISON_PATH,
@@ -248,8 +259,19 @@ def main():
     all_items, class_to_idx, idx_to_class = discover_dataset(args.data_dir)
     class_names = [idx_to_class[i] for i in range(len(idx_to_class))]
     _, _, test_samples = build_stratified_dataset_splits(all_items, class_to_idx)
+    
     if args.max_test_samples and len(test_samples) > args.max_test_samples:
-        test_samples = test_samples[:args.max_test_samples]
+        per_class_limit = max(1, args.max_test_samples // len(class_names))
+        logger.info(f"Applying stratified test sampling: selecting {per_class_limit} samples per class across {len(class_names)} classes...")
+        by_class = defaultdict(list)
+        for p, c in test_samples:
+            by_class[c].append((p, c))
+        stratified_test = []
+        for c in range(len(class_names)):
+            stratified_test.extend(by_class[c][:per_class_limit])
+        random.Random(42).shuffle(stratified_test)
+        test_samples = stratified_test
+        logger.info(f"Stratified test sample size: {len(test_samples)} (all 38 classes represented).")
 
     models_to_eval = []
     if MOBILENET_MODEL_PATH.exists():
@@ -275,26 +297,37 @@ def main():
 
         if "MobileNet" in model_name or primary_report_df is None:
             primary_report_df = report_df
-            # Save classification report CSV
+            # Save classification report CSV to both results/ and results/final/
             report_df.to_csv(CLASSIFICATION_REPORT_PATH)
-            logger.info(f"Saved classification report CSV to {CLASSIFICATION_REPORT_PATH}")
+            report_df.to_csv(FINAL_CLASSIFICATION_REPORT_PATH)
+            logger.info(f"Saved classification report CSV to {FINAL_CLASSIFICATION_REPORT_PATH}")
 
             # Plot confusion matrix
             plot_confusion_matrix(cm, class_names, CONFUSION_MATRIX_PATH)
+            plot_confusion_matrix(cm, class_names, FINAL_CONFUSION_MATRIX_PATH)
 
             # Plot prediction samples grid
             plot_prediction_samples(sample_preds, PREDICTION_SAMPLES_PATH)
+            plot_prediction_samples(sample_preds, FINAL_PREDICTION_SAMPLES_PATH)
 
     # Save metrics JSON
     save_json(all_metrics, METRICS_JSON_PATH)
+    save_json(all_metrics, FINAL_METRICS_JSON_PATH)
 
     # Plot model comparison if multiple models
     if len(all_metrics) >= 2:
         plot_model_comparison(all_metrics, MODEL_COMPARISON_PATH)
+        plot_model_comparison(all_metrics, FINAL_MODEL_COMPARISON_PATH)
 
-    # Generate Markdown Report
+    # Generate Markdown Report in both locations
     generate_markdown_report(all_metrics, primary_report_df, class_names, EVAL_REPORT_PATH)
-    logger.info("Evaluation complete! All artifacts generated in results/ directory.")
+    generate_markdown_report(all_metrics, primary_report_df, class_names, FINAL_EVAL_REPORT_PATH)
+
+    # If training history exists in results/, mirror it to results/final/final_training_history.png
+    if (RESULTS_DIR / "training_history.png").exists():
+        shutil.copyfile(RESULTS_DIR / "training_history.png", FINAL_RESULTS_DIR / "final_training_history.png")
+
+    logger.info("Evaluation complete! All artifacts generated in results/ and results/final/.")
 
 
 if __name__ == "__main__":

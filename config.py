@@ -34,7 +34,7 @@ TEST_RATIO = 0.15
 BATCH_SIZE = 32
 DEFAULT_EPOCHS = 15
 LEARNING_RATE_CUSTOM = 1e-3
-LEARNING_RATE_TRANSFER = 1e-4
+LEARNING_RATE_TRANSFER = 1e-3
 LEARNING_RATE_FINE_TUNE = 1e-5
 
 # Model Artifact Locations
@@ -43,7 +43,18 @@ MOBILENET_MODEL_PATH = MODELS_DIR / "plantdiseasemodel.keras"
 VGG16_MODEL_PATH = MODELS_DIR / "vgg16_model.keras"
 CLASS_INDICES_PATH = MODELS_DIR / "class_indices.json"
 
-# Evaluation Artifact Locations
+# Final Evaluation Artifact Locations (Phase 6 Deliverables)
+FINAL_RESULTS_DIR = RESULTS_DIR / "final"
+FINAL_RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+FINAL_EVAL_REPORT_PATH = FINAL_RESULTS_DIR / "final_evaluation_report.md"
+FINAL_CLASSIFICATION_REPORT_PATH = FINAL_RESULTS_DIR / "final_classification_report.csv"
+FINAL_CONFUSION_MATRIX_PATH = FINAL_RESULTS_DIR / "final_confusion_matrix.png"
+FINAL_TRAINING_HISTORY_PATH = FINAL_RESULTS_DIR / "final_training_history.png"
+FINAL_MODEL_COMPARISON_PATH = FINAL_RESULTS_DIR / "final_model_comparison.png"
+FINAL_PREDICTION_SAMPLES_PATH = FINAL_RESULTS_DIR / "final_prediction_samples.png"
+FINAL_METRICS_JSON_PATH = FINAL_RESULTS_DIR / "final_metrics.json"
+
+# Evaluation Artifact Locations (Mirrored / Standard)
 EVAL_REPORT_PATH = RESULTS_DIR / "evaluation_report.md"
 CLASSIFICATION_REPORT_PATH = RESULTS_DIR / "classification_report.csv"
 CONFUSION_MATRIX_PATH = RESULTS_DIR / "confusion_matrix.png"

@@ -153,13 +153,17 @@ def _extract_sample_id(filename: str) -> str:
     Example:
         '00075aa8-d81a-4184-8541-b692b78d398a___FREC_Scab 3335_270deg.JPG'
         -> '00075aa8-d81a-4184-8541-b692b78d398a'
+        'RS_Rust 2335_flipLR.JPG' -> 'RS_Rust 2335'
     """
-    if "___" in filename:
-        return filename.split("___")[0].strip()
-    match = re.match(r"^([a-f0-9\-]{8,})", filename, re.IGNORECASE)
+    stem = Path(filename).stem
+    if "___" in stem:
+        return stem.split("___")[0].strip()
+    match = re.match(r"^([a-f0-9\-]{8,})", stem, re.IGNORECASE)
     if match:
-        return match.group(1)
-    return filename.split(".")[0].split("_")[0]
+        return match.group(1).strip()
+    # Strip orientation, flip, degree, or duplicate suffix tokens
+    clean = re.sub(r'(_flip\w*|_\d+deg.*|_new\w*|\(\d+\))$', '', stem, flags=re.IGNORECASE).strip()
+    return clean
 
 
 def build_stratified_dataset_splits(
@@ -258,12 +262,25 @@ def create_tf_dataset(
     if is_training:
         dataset = dataset.shuffle(buffer_size=min(len(samples), 5000), seed=RANDOM_SEED, reshuffle_each_iteration=True)
 
-    def _parse_and_preprocess(path_tensor, label_tensor):
+    def _read_and_resize(path_tensor, label_tensor):
         img_bytes = tf.io.read_file(path_tensor)
         img = tf.io.decode_jpeg(img_bytes, channels=3)
         img = tf.image.resize(img, image_size)
+        img = tf.cast(img, tf.float32)
+        return img, label_tensor
 
-        # Apply model-specific normalization
+    dataset = dataset.map(_read_and_resize, num_parallel_calls=tf.data.AUTOTUNE)
+
+    # Apply data augmentation if training (operates on raw [0, 255] float tensors)
+    if is_training:
+        aug_layer = get_training_augmentation_pipeline()
+        dataset = dataset.map(
+            lambda x, y: (aug_layer(x, training=True), y),
+            num_parallel_calls=tf.data.AUTOTUNE
+        )
+
+    # Apply model-specific normalization after augmentation
+    def _normalize(img, label_tensor):
         m_type = model_type.lower().replace("-", "").replace("_", "")
         if "mobilenet" in m_type:
             # Scale [0, 255] to [-1, 1]
@@ -276,16 +293,7 @@ def create_tf_dataset(
 
         return img, label_tensor
 
-    dataset = dataset.map(_parse_and_preprocess, num_parallel_calls=tf.data.AUTOTUNE)
-
-    # Apply data augmentation if training
-    if is_training:
-        aug_layer = get_training_augmentation_pipeline()
-        dataset = dataset.map(
-            lambda x, y: (aug_layer(x, training=True), y),
-            num_parallel_calls=tf.data.AUTOTUNE
-        )
-
+    dataset = dataset.map(_normalize, num_parallel_calls=tf.data.AUTOTUNE)
     dataset = dataset.batch(batch_size)
     dataset = dataset.prefetch(buffer_size=tf.data.AUTOTUNE)
 
