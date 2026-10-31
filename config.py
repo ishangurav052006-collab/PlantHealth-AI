@@ -9,13 +9,14 @@ from pathlib import Path
 # Base Paths
 PROJECT_ROOT = Path(__file__).resolve().parent
 DATA_DIR = PROJECT_ROOT / "data" / "PlantVillage"
+DEMO_SAMPLES_DIR = PROJECT_ROOT / "demo_samples"
 MODELS_DIR = PROJECT_ROOT / "models"
 RESULTS_DIR = PROJECT_ROOT / "results"
 DOCS_DIR = PROJECT_ROOT / "docs"
 NOTEBOOKS_DIR = PROJECT_ROOT / "notebooks"
 
 # Ensure directories exist
-for directory in [MODELS_DIR, RESULTS_DIR, DATA_DIR]:
+for directory in [MODELS_DIR, RESULTS_DIR, DEMO_SAMPLES_DIR]:
     directory.mkdir(parents=True, exist_ok=True)
 
 # Dataset & Image Specs

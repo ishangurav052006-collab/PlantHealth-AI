@@ -132,8 +132,15 @@ from config import (
     CONFUSION_MATRIX_PATH,
     CUSTOM_CNN_MODEL_PATH,
     DATA_DIR,
+    DEMO_SAMPLES_DIR,
     EVAL_REPORT_PATH,
+    FINAL_CLASSIFICATION_REPORT_PATH,
+    FINAL_CONFUSION_MATRIX_PATH,
     FINAL_METRICS_JSON_PATH,
+    FINAL_MODEL_COMPARISON_PATH,
+    FINAL_PREDICTION_SAMPLES_PATH,
+    FINAL_RESULTS_DIR,
+    FINAL_TRAINING_HISTORY_PATH,
     METRICS_JSON_PATH,
     MOBILENET_MODEL_PATH,
     MODEL_COMPARISON_PATH,
@@ -310,51 +317,110 @@ def render_disease_detection(selected_model: str):
         )
         return
 
+    # Initialize session state for persistent interactive diagnosis
+    if "active_specimen" not in st.session_state:
+        st.session_state["active_specimen"] = None
+        st.session_state["active_label"] = None
+
+    # Retrieve pre-loaded demo specimens (available on Streamlit Cloud without local dataset)
+    demo_files = sorted(list(DEMO_SAMPLES_DIR.glob("*.jpg")) + list(DEMO_SAMPLES_DIR.glob("*.png")))
+
     # Tabs for Upload vs Sample Gallery
-    tab1, tab2 = st.tabs(["📁 Upload Leaf Image", "🖼️ Sample Leaf Gallery"])
-    selected_image = None
-    image_label_hint = None
+    tab1, tab2 = st.tabs(["📁 Upload Leaf Image", "🖼️ Interactive Specimen Gallery (16 Pre-loaded)"])
 
     with tab1:
-        uploaded_file = st.file_uploader(
-            "Choose a leaf image (JPG, PNG, JPEG)",
-            type=["jpg", "jpeg", "png"]
-        )
-        if uploaded_file is not None:
-            selected_image = uploaded_file
+        col_up1, col_up2 = st.columns([1.2, 1])
+        with col_up1:
+            uploaded_file = st.file_uploader(
+                "Upload a leaf photograph (JPG, PNG, JPEG)",
+                type=["jpg", "jpeg", "png"],
+                help="Accepts smartphone photographs or field leaf scans"
+            )
+            if uploaded_file is not None:
+                st.session_state["active_specimen"] = uploaded_file
+                st.session_state["active_label"] = None
+
+        with col_up2:
+            st.markdown("##### ⚡ Quick Preset Test")
+            st.caption("No image on your device? Select an instant pre-loaded specimen:")
+            if demo_files:
+                demo_options = {
+                    f"{parse_class_name(p.stem)['plant']} — {parse_class_name(p.stem)['disease']}": p
+                    for p in demo_files
+                }
+                preset_name = st.selectbox(
+                    "Choose an agricultural specimen:",
+                    ["-- Select a demo leaf --"] + list(demo_options.keys()),
+                    index=0
+                )
+                if preset_name != "-- Select a demo leaf --":
+                    st.session_state["active_specimen"] = str(demo_options[preset_name])
+                    st.session_state["active_label"] = demo_options[preset_name].stem
 
     with tab2:
-        st.write("Click a sample leaf to test the diagnostic pipeline instantly:")
-        sample_paths = list(Path(DATA_DIR).glob("*/*.JPG"))
+        st.markdown("##### 🌿 Click any leaf specimen below to diagnose instantly:")
+        st.caption("16 representative agricultural crops and diseases pre-packaged for instant cloud demonstration:")
+
+        sample_paths = demo_files
+        if not sample_paths and Path(DATA_DIR).exists():
+            sample_paths = list(Path(DATA_DIR).glob("*/*.JPG"))
+
         if sample_paths:
-            # Pick 6 distinct classes
-            rng = np.random.RandomState(42)
-            chosen_samples = rng.choice(sample_paths, size=min(6, len(sample_paths)), replace=False)
-            cols = st.columns(6)
-            for i, p in enumerate(chosen_samples):
-                with cols[i]:
-                    img_thumb = Image.open(p).resize((120, 120))
-                    cls_name = p.parent.name
+            # Display in responsive grid of 4 columns
+            cols = st.columns(4)
+            for i, p in enumerate(sample_paths):
+                col = cols[i % 4]
+                with col:
+                    cls_name = p.stem if p.parent == DEMO_SAMPLES_DIR else p.parent.name
                     parsed = parse_class_name(cls_name)
-                    st.image(img_thumb, caption=f"{parsed['plant']}\n({parsed['disease'][:14]}..)", use_container_width=True)
-                    if st.button(f"Load #{i+1}", key=f"sample_{i}"):
-                        selected_image = str(p)
-                        image_label_hint = cls_name
+                    is_healthy = parsed["status"] == "Healthy"
+                    badge_style = "color: #1B5E20; background: #E8F5E9;" if is_healthy else "color: #B71C1C; background: #FFEBEE;"
+
+                    try:
+                        img_thumb = Image.open(p).resize((160, 160))
+                        st.image(img_thumb, use_container_width=True)
+                    except Exception:
+                        pass
+
+                    st.markdown(f"""
+                    <div style="font-size: 0.85rem; font-weight: 700; margin-bottom: 2px;">{parsed['plant']}</div>
+                    <div style="font-size: 0.78rem; font-weight: 500; {badge_style} padding: 2px 6px; border-radius: 4px; display: inline-block; margin-bottom: 6px;">
+                        {parsed['disease'][:22]}
+                    </div>
+                    """, unsafe_allow_html=True)
+
+                    if st.button("🔬 Diagnose", key=f"demo_btn_{i}", use_container_width=True):
+                        st.session_state["active_specimen"] = str(p)
+                        st.session_state["active_label"] = cls_name
+                        st.rerun()
         else:
-            st.info("Sample gallery will populate when dataset is downloaded to `data/PlantVillage`.")
+            st.info("No demo specimens found. Please add sample images to `demo_samples/`.")
+
+    selected_image = st.session_state.get("active_specimen")
+    image_label_hint = st.session_state.get("active_label")
 
     # Image Preview & Analysis Execution
     if selected_image is not None:
         st.markdown("---")
+        c_hdr1, c_hdr2 = st.columns([3, 1])
+        with c_hdr1:
+            st.markdown("### 📷 Active Leaf Diagnosis")
+        with c_hdr2:
+            if st.button("🔄 Reset / Clear Specimen", use_container_width=True):
+                st.session_state["active_specimen"] = None
+                st.session_state["active_label"] = None
+                st.rerun()
+
         col_img, col_diag = st.columns([1, 1.3])
 
         with col_img:
-            st.markdown("#### 📷 Leaf Specimen Preview")
+            st.markdown("#### 🌿 Foliar Specimen")
             try:
                 img_array, pil_img = validate_and_load_image(selected_image)
-                st.image(pil_img, caption="Input Specimen (224 × 224 Standardized)", use_container_width=True)
+                st.image(pil_img, caption="Input Specimen (224 × 224 Lanczos Resized)", use_container_width=True)
                 if image_label_hint:
-                    st.info(f"**Ground Truth Benchmark:** `{image_label_hint}`")
+                    parsed_hint = parse_class_name(image_label_hint)
+                    st.info(f"**Expected Benchmark Label:** `{parsed_hint['plant']} — {parsed_hint['disease']}`")
             except ImageValidationError as e:
                 st.error(f"Image Validation Error: {e}")
                 return
@@ -456,35 +522,65 @@ def render_model_performance():
     st.markdown("---")
 
     # Visualizations Tabs
-    vt1, vt2, vt3, vt4 = st.tabs([
-        "📈 Training History", "🧩 Confusion Matrix", "🔬 Qualitative Predictions", "📋 Per-Class Report"
+    vt1, vt2, vt3, vt4, vt5, vt6 = st.tabs([
+        "📈 Training History",
+        "🧩 Confusion Matrix",
+        "⚖️ Confidence Calibration",
+        "🔬 Qualitative Case Studies",
+        "📊 Model Comparison",
+        "📋 Per-Class Report"
     ])
 
     with vt1:
         st.markdown("#### Convergence & Loss Curves")
-        if TRAINING_HISTORY_PATH.exists():
-            st.image(str(TRAINING_HISTORY_PATH), use_container_width=True)
+        p_hist = FINAL_TRAINING_HISTORY_PATH if FINAL_TRAINING_HISTORY_PATH.exists() else TRAINING_HISTORY_PATH
+        if p_hist.exists():
+            st.image(str(p_hist), use_container_width=True)
         else:
             st.info("Training history plot will appear here once model training finishes.")
 
     with vt2:
-        st.markdown("#### 38-Class Heatmap Confusion Matrix")
-        if CONFUSION_MATRIX_PATH.exists():
-            st.image(str(CONFUSION_MATRIX_PATH), use_container_width=True)
+        st.markdown("#### 38-Class Full Test Confusion Matrix (13,208 Images)")
+        p_cm_full = FINAL_RESULTS_DIR / "full_test_confusion_matrix.png"
+        p_cm = p_cm_full if p_cm_full.exists() else (FINAL_CONFUSION_MATRIX_PATH if FINAL_CONFUSION_MATRIX_PATH.exists() else CONFUSION_MATRIX_PATH)
+        if p_cm.exists():
+            st.image(str(p_cm), use_container_width=True)
         else:
             st.info("Confusion matrix heatmap will appear here after evaluation.")
 
     with vt3:
-        st.markdown("#### 10-Sample Unseen Test Prediction Grid")
-        if PREDICTION_SAMPLES_PATH.exists():
-            st.image(str(PREDICTION_SAMPLES_PATH), use_container_width=True)
+        st.markdown("#### Probabilistic Confidence Calibration (Temperature Scaling)")
+        st.write("Evaluates whether predicted softmax probabilities correspond to true empirical accuracy.")
+        p_calib = FINAL_RESULTS_DIR / "calibration_reliability_diagram.png"
+        if p_calib.exists():
+            st.image(str(p_calib), use_container_width=True)
+            st.caption("Left: Uncalibrated Softmax (ECE = 3.23%). Right: Post-Temperature Scaling T*=1.25 (ECE = 1.78%).")
+        else:
+            st.info("Calibration diagram will appear here after running `scripts/audit_confidence_calibration.py`.")
+
+    with vt4:
+        st.markdown("#### Unseen Test Prediction Grid (Correct vs. Misclassified)")
+        p_samples = FINAL_RESULTS_DIR / "inference_validation_samples.png"
+        p_qual = p_samples if p_samples.exists() else (FINAL_PREDICTION_SAMPLES_PATH if FINAL_PREDICTION_SAMPLES_PATH.exists() else PREDICTION_SAMPLES_PATH)
+        if p_qual.exists():
+            st.image(str(p_qual), use_container_width=True)
         else:
             st.info("Prediction sample grid will appear here after evaluation.")
 
-    with vt4:
-        st.markdown("#### Per-Class Diagnostic Performance")
-        if CLASSIFICATION_REPORT_PATH.exists():
-            df_rep = pd.read_csv(CLASSIFICATION_REPORT_PATH, index_col=0)
+    with vt5:
+        st.markdown("#### Architecture Comparison (MobileNetV2 vs. Custom CNN)")
+        p_comp = FINAL_MODEL_COMPARISON_PATH if FINAL_MODEL_COMPARISON_PATH.exists() else MODEL_COMPARISON_PATH
+        if p_comp.exists():
+            st.image(str(p_comp), use_container_width=True)
+        else:
+            st.info("Model comparison plot will appear here.")
+
+    with vt6:
+        st.markdown("#### Per-Class Diagnostic Performance Breakdown")
+        p_rep_full = FINAL_RESULTS_DIR / "full_test_classification_report.csv"
+        p_rep = p_rep_full if p_rep_full.exists() else (FINAL_CLASSIFICATION_REPORT_PATH if FINAL_CLASSIFICATION_REPORT_PATH.exists() else CLASSIFICATION_REPORT_PATH)
+        if p_rep.exists():
+            df_rep = pd.read_csv(p_rep, index_col=0)
             st.dataframe(df_rep.style.format("{:.2%}", subset=["precision", "recall", "f1-score"]),
                          use_container_width=True)
         else:
