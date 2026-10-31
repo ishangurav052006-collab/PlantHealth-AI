@@ -133,6 +133,7 @@ from config import (
     CUSTOM_CNN_MODEL_PATH,
     DATA_DIR,
     EVAL_REPORT_PATH,
+    FINAL_METRICS_JSON_PATH,
     METRICS_JSON_PATH,
     MOBILENET_MODEL_PATH,
     MODEL_COMPARISON_PATH,
@@ -224,9 +225,10 @@ def render_home_dashboard():
     with col3:
         # Load accuracy from metrics.json if available
         acc_text = "N/A"
-        if METRICS_JSON_PATH.exists():
+        target_path = FINAL_METRICS_JSON_PATH if FINAL_METRICS_JSON_PATH.exists() else METRICS_JSON_PATH
+        if target_path.exists():
             try:
-                metrics = load_json(METRICS_JSON_PATH)
+                metrics = load_json(target_path)
                 primary = metrics.get("MobileNetV2 (Primary)", {})
                 if "accuracy" in primary:
                     acc_text = f"{primary['accuracy']:.1%}"
@@ -276,12 +278,26 @@ def render_home_dashboard():
         </div>
         """, unsafe_allow_html=True)
 
+    # Agricultural Field Deployment Disclaimer
+    st.warning(
+        "⚠️ **Agricultural Field Deployment Disclaimer:** Benchmark evaluation metrics are established on the standardized "
+        "laboratory-controlled PlantVillage dataset (uniform backgrounds, single centered leaf, controlled lighting). "
+        "High benchmark performance under laboratory conditions does not guarantee equivalent diagnostic accuracy in "
+        "real agricultural field environments, where complex soil backgrounds, fluctuating sunlight, leaf occlusions, "
+        "and co-occurring nutritional deficiencies are present. Field deployments require on-site validation."
+    )
+
 
 def render_disease_detection(selected_model: str):
     """Renders interactive disease classification workstation."""
     st.markdown("## 🔬 Plant Disease Diagnosis Workstation")
     st.write(
         "Upload a leaf image or select from sample agricultural specimens to diagnose plant health and receive treatment advice."
+    )
+
+    st.info(
+        "💡 **Field Notice:** For highest diagnostic accuracy, photograph a single leaf centered against a plain or shaded "
+        "background to approximate training conditions."
     )
 
     predictor = get_cached_predictor(selected_model)
@@ -413,9 +429,10 @@ def render_model_performance():
     st.write("Rigorous quantitative metrics computed exclusively against the untouched 15% stratified test split.")
 
     # Metric Cards
-    if METRICS_JSON_PATH.exists():
+    target_metrics_path = FINAL_METRICS_JSON_PATH if FINAL_METRICS_JSON_PATH.exists() else METRICS_JSON_PATH
+    if target_metrics_path.exists():
         try:
-            metrics_data = load_json(METRICS_JSON_PATH)
+            metrics_data = load_json(target_metrics_path)
             models = list(metrics_data.keys())
             st.markdown("### 🏆 Architecture Comparison")
 

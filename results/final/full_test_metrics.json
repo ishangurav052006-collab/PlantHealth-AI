@@ -1,0 +1,13 @@
+{
+  "evaluation_scope": "Full Untouched Held-Out Test Split",
+  "total_test_samples": 13208,
+  "accuracy": 0.8874167171411266,
+  "precision_macro": 0.8906842407638464,
+  "recall_macro": 0.8883536181027926,
+  "f1_macro": 0.8853949822078218,
+  "precision_weighted": 0.8899291222345144,
+  "recall_weighted": 0.8874167171411266,
+  "f1_weighted": 0.8844977431797526,
+  "throughput_images_per_sec": 304.3746253966464,
+  "inference_duration_sec": 43.393893241882324
+}

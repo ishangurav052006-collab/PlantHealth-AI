@@ -1,0 +1,20 @@
+{
+  "balanced_test_1520": {
+    "samples": 1520,
+    "sampling_method": "Stratified 40 samples per class across all 38 classes",
+    "accuracy": 0.8868421052631579,
+    "macro_precision": 0.8919029351947785,
+    "macro_recall": 0.886842105263158,
+    "macro_f1": 0.8849667436428036,
+    "weighted_f1": 0.8849667436428035
+  },
+  "full_test_13208": {
+    "samples": 13208,
+    "sampling_method": "Complete 100% held-out test split (all available samples)",
+    "accuracy": 0.8874167171411266,
+    "macro_precision": 0.8906842407638464,
+    "macro_recall": 0.8883536181027926,
+    "macro_f1": 0.8853949822078218,
+    "weighted_f1": 0.8844977431797526
+  }
+}

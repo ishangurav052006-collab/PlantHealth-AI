@@ -1,0 +1,270 @@
+{
+  "optimal_temperature_T": 1.2455255763895845,
+  "optimized_on": "Validation split (1,520 balanced samples)",
+  "evaluated_on": "Test split (1,520 balanced samples)",
+  "uncalibrated": {
+    "temperature": 1.0,
+    "ece_15_bins": 0.032323738344405814,
+    "ece_10_bins": 0.03382209051204359,
+    "multiclass_brier": 0.16054554283618927,
+    "binary_top1_brier": 0.06841616702042468,
+    "bin_details": [
+      {
+        "bin_lower": 0.0,
+        "bin_upper": 0.06666666666666667,
+        "accuracy": 0.0,
+        "confidence": 0.03333333333333333,
+        "count": 0,
+        "proportion": 0.0
+      },
+      {
+        "bin_lower": 0.06666666666666667,
+        "bin_upper": 0.13333333333333333,
+        "accuracy": 0.0,
+        "confidence": 0.1,
+        "count": 0,
+        "proportion": 0.0
+      },
+      {
+        "bin_lower": 0.13333333333333333,
+        "bin_upper": 0.2,
+        "accuracy": 0.0,
+        "confidence": 0.17985233664512634,
+        "count": 1,
+        "proportion": 0.0006578947368421052
+      },
+      {
+        "bin_lower": 0.2,
+        "bin_upper": 0.26666666666666666,
+        "accuracy": 0.25,
+        "confidence": 0.2468019723892212,
+        "count": 4,
+        "proportion": 0.002631578947368421
+      },
+      {
+        "bin_lower": 0.26666666666666666,
+        "bin_upper": 0.3333333333333333,
+        "accuracy": 0.3333333333333333,
+        "confidence": 0.3185160458087921,
+        "count": 12,
+        "proportion": 0.007894736842105263
+      },
+      {
+        "bin_lower": 0.3333333333333333,
+        "bin_upper": 0.4,
+        "accuracy": 0.08333333333333333,
+        "confidence": 0.37516486644744873,
+        "count": 12,
+        "proportion": 0.007894736842105263
+      },
+      {
+        "bin_lower": 0.4,
+        "bin_upper": 0.4666666666666667,
+        "accuracy": 0.4444444444444444,
+        "confidence": 0.4414118230342865,
+        "count": 18,
+        "proportion": 0.011842105263157895
+      },
+      {
+        "bin_lower": 0.4666666666666667,
+        "bin_upper": 0.5333333333333333,
+        "accuracy": 0.4864864864864865,
+        "confidence": 0.4982721507549286,
+        "count": 37,
+        "proportion": 0.024342105263157894
+      },
+      {
+        "bin_lower": 0.5333333333333333,
+        "bin_upper": 0.6,
+        "accuracy": 0.5365853658536586,
+        "confidence": 0.5595535039901733,
+        "count": 41,
+        "proportion": 0.026973684210526316
+      },
+      {
+        "bin_lower": 0.6,
+        "bin_upper": 0.6666666666666666,
+        "accuracy": 0.48717948717948717,
+        "confidence": 0.6329934000968933,
+        "count": 39,
+        "proportion": 0.025657894736842105
+      },
+      {
+        "bin_lower": 0.6666666666666666,
+        "bin_upper": 0.7333333333333333,
+        "accuracy": 0.5789473684210527,
+        "confidence": 0.704511821269989,
+        "count": 38,
+        "proportion": 0.025
+      },
+      {
+        "bin_lower": 0.7333333333333333,
+        "bin_upper": 0.8,
+        "accuracy": 0.6530612244897959,
+        "confidence": 0.7671969532966614,
+        "count": 49,
+        "proportion": 0.03223684210526316
+      },
+      {
+        "bin_lower": 0.8,
+        "bin_upper": 0.8666666666666667,
+        "accuracy": 0.8372093023255814,
+        "confidence": 0.8375730514526367,
+        "count": 43,
+        "proportion": 0.028289473684210528
+      },
+      {
+        "bin_lower": 0.8666666666666667,
+        "bin_upper": 0.9333333333333333,
+        "accuracy": 0.711864406779661,
+        "confidence": 0.9034640789031982,
+        "count": 59,
+        "proportion": 0.03881578947368421
+      },
+      {
+        "bin_lower": 0.9333333333333333,
+        "bin_upper": 1.0,
+        "accuracy": 0.9794344473007712,
+        "confidence": 0.9935359358787537,
+        "count": 1167,
+        "proportion": 0.7677631578947368
+      }
+    ]
+  },
+  "temperature_calibrated": {
+    "temperature": 1.2455255763895845,
+    "ece_15_bins": 0.017761419282147733,
+    "ece_10_bins": 0.013364016509761979,
+    "multiclass_brier": 0.15753479301929474,
+    "binary_top1_brier": 0.06637155236930832,
+    "bin_details": [
+      {
+        "bin_lower": 0.0,
+        "bin_upper": 0.06666666666666667,
+        "accuracy": 0.0,
+        "confidence": 0.03333333333333333,
+        "count": 0,
+        "proportion": 0.0
+      },
+      {
+        "bin_lower": 0.06666666666666667,
+        "bin_upper": 0.13333333333333333,
+        "accuracy": 0.0,
+        "confidence": 0.1,
+        "count": 0,
+        "proportion": 0.0
+      },
+      {
+        "bin_lower": 0.13333333333333333,
+        "bin_upper": 0.2,
+        "accuracy": 0.0,
+        "confidence": 0.1589328795671463,
+        "count": 1,
+        "proportion": 0.0006578947368421052
+      },
+      {
+        "bin_lower": 0.2,
+        "bin_upper": 0.26666666666666666,
+        "accuracy": 0.3333333333333333,
+        "confidence": 0.24001853168010712,
+        "count": 9,
+        "proportion": 0.0059210526315789476
+      },
+      {
+        "bin_lower": 0.26666666666666666,
+        "bin_upper": 0.3333333333333333,
+        "accuracy": 0.2,
+        "confidence": 0.2944730520248413,
+        "count": 15,
+        "proportion": 0.009868421052631578
+      },
+      {
+        "bin_lower": 0.3333333333333333,
+        "bin_upper": 0.4,
+        "accuracy": 0.45454545454545453,
+        "confidence": 0.37120237946510315,
+        "count": 22,
+        "proportion": 0.014473684210526316
+      },
+      {
+        "bin_lower": 0.4,
+        "bin_upper": 0.4666666666666667,
+        "accuracy": 0.4666666666666667,
+        "confidence": 0.43505993485450745,
+        "count": 30,
+        "proportion": 0.019736842105263157
+      },
+      {
+        "bin_lower": 0.4666666666666667,
+        "bin_upper": 0.5333333333333333,
+        "accuracy": 0.4489795918367347,
+        "confidence": 0.4998337924480438,
+        "count": 49,
+        "proportion": 0.03223684210526316
+      },
+      {
+        "bin_lower": 0.5333333333333333,
+        "bin_upper": 0.6,
+        "accuracy": 0.5853658536585366,
+        "confidence": 0.5692535042762756,
+        "count": 41,
+        "proportion": 0.026973684210526316
+      },
+      {
+        "bin_lower": 0.6,
+        "bin_upper": 0.6666666666666666,
+        "accuracy": 0.5434782608695652,
+        "confidence": 0.6323981285095215,
+        "count": 46,
+        "proportion": 0.030263157894736843
+      },
+      {
+        "bin_lower": 0.6666666666666666,
+        "bin_upper": 0.7333333333333333,
+        "accuracy": 0.7045454545454546,
+        "confidence": 0.6983165740966797,
+        "count": 44,
+        "proportion": 0.02894736842105263
+      },
+      {
+        "bin_lower": 0.7333333333333333,
+        "bin_upper": 0.8,
+        "accuracy": 0.813953488372093,
+        "confidence": 0.7677521109580994,
+        "count": 43,
+        "proportion": 0.028289473684210528
+      },
+      {
+        "bin_lower": 0.8,
+        "bin_upper": 0.8666666666666667,
+        "accuracy": 0.6875,
+        "confidence": 0.8374896049499512,
+        "count": 48,
+        "proportion": 0.031578947368421054
+      },
+      {
+        "bin_lower": 0.8666666666666667,
+        "bin_upper": 0.9333333333333333,
+        "accuracy": 0.8712871287128713,
+        "confidence": 0.9062262177467346,
+        "count": 101,
+        "proportion": 0.06644736842105263
+      },
+      {
+        "bin_lower": 0.9333333333333333,
+        "bin_upper": 1.0,
+        "accuracy": 0.9897292250233427,
+        "confidence": 0.9911931753158569,
+        "count": 1071,
+        "proportion": 0.7046052631578947
+      }
+    ]
+  },
+  "findings": [
+    "Uncalibrated MobileNetV2 raw softmax outputs exhibit overconfidence, with an initial ECE of 3.23%.",
+    "Optimizing Temperature parameter T on the held-out validation set yielded T* = 1.2455.",
+    "Post-temperature scaling on the untouched test set reduced ECE by 1.46 percentage points (down to 1.78%).",
+    "Classification accuracy is strictly preserved since temperature scaling is a monotonic transformation on logits.",
+    "Raw softmax outputs should not be presented as calibrated probabilistic certainty without temperature scaling or Platt scaling."
+  ]
+}
